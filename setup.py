@@ -16,7 +16,7 @@ requirements = [
 ]
 
 setup_requirements = [
-    'Scrapy==1.4.0',
+    'Scrapy==1.3.3',
     'pymongo==3.4.0',
     'scrapy-splash==0.7.1',
     'boto3==1.4.4'
