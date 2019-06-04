@@ -12,6 +12,11 @@ class ScreenshotPipeline(object):
     """
     Download screenshot by splash
     """
+    SPLASH_ARGS = {'html': 1,
+                   'png': 1,
+                   'width': 600,
+                   'render_all': 1,
+                   'wait': 1.5}
 
     def __init__(self, store_uri, s3store, api_key_splash, settings):
         self.settings = settings
@@ -30,13 +35,8 @@ class ScreenshotPipeline(object):
 
     def process_item(self, item, spider):
         self.spider = spider
-        splash_args = {
-            'html': 1,
-            'png': 1,
-            'width': 600,
-            'render_all': 1,
-            'wait': 1.5
-        }
+        splash_args = self.SPLASH_ARGS
+
         request = SplashRequest(
                         self.get_url(item),
                         endpoint='render.json',
