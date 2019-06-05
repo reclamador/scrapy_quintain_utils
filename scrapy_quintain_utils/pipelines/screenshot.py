@@ -12,11 +12,17 @@ class ScreenshotPipeline(object):
     """
     Download screenshot by splash
     """
+    DEFAULT_SPLASH_ARGS = {'html': 1,
+                           'png': 1,
+                           'width': 600,
+                           'render_all': 1,
+                           'wait': 1.5}
 
-    def __init__(self, store_uri, s3store, api_key_splash, settings):
+    def __init__(self, store_uri, s3store, api_key_splash, splash_args, settings):
         self.settings = settings
         self.store = s3store(store_uri)
         self.api_key_splash = api_key_splash
+        self.splash_args = splash_args
 
     @classmethod
     def from_settings(cls, settings):
@@ -26,21 +32,16 @@ class ScreenshotPipeline(object):
         s3store.POLICY = settings['IMAGES_STORE_S3_ACL']
         api_key_splash = settings['API_KEY']
         store_uri = settings['IMAGES_STORE']
-        return cls(store_uri, s3store, api_key_splash, settings=settings)
+        splash_args = settings.get('SCREENSHOT_PIPELINE_SPLASH_ARGS', cls.DEFAULT_SPLASH_ARGS)
+        return cls(store_uri, s3store, api_key_splash, splash_args, settings=settings)
 
     def process_item(self, item, spider):
         self.spider = spider
-        splash_args = {
-            'html': 1,
-            'png': 1,
-            'width': 600,
-            'render_all': 1,
-            'wait': 1.5
-        }
+
         request = SplashRequest(
                         self.get_url(item),
                         endpoint='render.json',
-                        args=splash_args,
+                        args=self.splash_args,
                         splash_headers={
                             'Authorization': basic_auth_header(self.api_key_splash, ''),
                         },
