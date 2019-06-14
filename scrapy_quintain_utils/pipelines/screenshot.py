@@ -18,11 +18,16 @@ class ScreenshotPipeline(object):
                            'render_all': 1,
                            'wait': 1.5}
 
-    def __init__(self, store_uri, s3store, api_key_splash, splash_args, settings):
+    DEFAULT_S3_HEADERS = {}
+
+
+
+    def __init__(self, store_uri, s3store, api_key_splash, splash_args, s3_headers, settings):
         self.settings = settings
         self.store = s3store(store_uri)
         self.api_key_splash = api_key_splash
         self.splash_args = splash_args
+        self.s3_headers = s3_headers
 
     @classmethod
     def from_settings(cls, settings):
@@ -33,7 +38,8 @@ class ScreenshotPipeline(object):
         api_key_splash = settings['API_KEY']
         store_uri = settings['IMAGES_STORE']
         splash_args = settings.get('SCREENSHOT_PIPELINE_SPLASH_ARGS', cls.DEFAULT_SPLASH_ARGS)
-        return cls(store_uri, s3store, api_key_splash, splash_args, settings=settings)
+        s3_headers = settings.get('SCREENSHOT_PIPELINE_S3_HEADERS', cls.DEFAULT_S3_HEADERS)
+        return cls(store_uri, s3store, api_key_splash, splash_args, s3_headers, settings=settings)
 
     def process_item(self, item, spider):
         self.spider = spider
@@ -58,7 +64,7 @@ class ScreenshotPipeline(object):
         png_bytes = base64.b64decode(response.data['png'])
         name = self.get_file_name(item)
 
-        self.store.persist_file(name, BytesIO(png_bytes), None)
+        self.store.persist_file(name, BytesIO(png_bytes), info=None, headers=self.s3_headers)
         # Store filename in item.
         item = self.update_item_with_s3_key(name, item)
         self.inc_stats(self.spider, 'uptodate')
